@@ -72,7 +72,10 @@ io.on('connection', function (socket) {
       value: dice_value
     });
   });
-
+  //broadcast the winner
+  socket.on('winner', function(username){
+    socket.broadcast.emit('winner', username);
+})
 
   //END
 
