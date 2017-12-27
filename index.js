@@ -35,6 +35,8 @@ io.on('connection', function (socket) {
 
     // we store the username in the socket session for this client
     socket.username = username;
+    // add user room////////////////////////////////////////////////
+    socket.room = "Room " + 1;
     ++numUsers;
     addedUser = true;
     socket.emit('login', {
@@ -61,6 +63,20 @@ io.on('connection', function (socket) {
     });
   });
 
+  //dua ngua part =))
+  // When the client emits 'roll the dice', we random 1->6 and broadcast to all clients
+  socket.on('roll the dice', function(username){
+    var dice_value = Math.floor(6*Math.random())+1;
+    io.emit('dice result', {
+      username: username,
+      value: dice_value
+    });
+  });
+
+
+  //END
+
+
   // when the user disconnects.. perform this
   socket.on('disconnect', function () {
     if (addedUser) {
@@ -73,4 +89,7 @@ io.on('connection', function (socket) {
       });
     }
   });
+
+
+
 });

@@ -65,6 +65,8 @@ $(function() {
       });
       // tell server to execute 'new message' and send along one parameter
       socket.emit('new message', message);
+      if(message === '/roll')
+        socket.emit('roll the dice', username);
     }
   }
 
@@ -278,5 +280,14 @@ $(function() {
   socket.on('reconnect_error', function () {
     log('attempt to reconnect has failed');
   });
+
+
+  //Dua ngua part
+
+  socket.on('dice result', function (data) {
+    log('user ' + data.username + ' has rolled ' +data.value)
+  })
+
+
 
 });
