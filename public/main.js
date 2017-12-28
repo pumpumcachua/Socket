@@ -48,7 +48,14 @@ $(function() {
     log('Winner: '+ username)
   })
 
+  socket.on('start game',function(data){
+
   })
+  socket.on('response room state', function(data))
+  {
+    score = data.score;
+    length = data.length;
+  }
   function Roll()
   {
     socket.emit('roll the dice', username);
