@@ -137,13 +137,24 @@ ul {
 /* Input */
 
 .inputMessage {
-  border: 10px solid #000;
+ border: 3px solid #73AD21;
   bottom: 0;
   height: 60px;
-  left: 0;
   outline: none;
   padding-left: 10px;
   position: absolute;
   right: 0;
-  width: 100%;
+  width: 50%;
+}
+
+.column {
+    float: left;
+    width: 50%;
+}
+
+/* Clear floats after the columns */
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
 }
