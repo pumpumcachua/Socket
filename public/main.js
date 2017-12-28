@@ -24,7 +24,8 @@ $(function() {
   var $currentInput = $usernameInput.focus();
 
   var socket = io();
-
+  var score;
+  var length;
 
 
   //Dua ngua part
@@ -42,11 +43,23 @@ $(function() {
     log('Winner: '+ username)
   })
 
+  socket.on('start game',function(data){
+
+  })
+  socket.on('response room state', function(data))
+  {
+    score = data.score;
+    length = data.length;
+  }
   function Roll()
   {
     socket.emit('roll the dice', username);
   }
 
+  function Accepted()
+  {
+    socket.emit('request room state', username);
+  }
 
 
 
