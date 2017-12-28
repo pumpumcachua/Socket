@@ -15,7 +15,8 @@ var score = {};
 var N = 3;
 var next_roller = 0;
 var L = Math.floor(30*Math.random())+1;
-
+console.log("Number of players: ",N)
+console.log("Race length: ",L)
 // Routing
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -90,29 +91,47 @@ io.on('connection', function (socket) {
   // When the client emits 'roll the dice', we random 1->6 and broadcast to all clients
   socket.on('roll the dice', function(username){
     var dice_value = Math.floor(6*Math.random())+1;
-    score[username] += dice_value;
-    io.emit('dice result', {
-      username: username,
-      value: dice_value,
-      scoreList: score
-    });
 
+    tmp_score = score[username] + dice_value;
     if(next_roller >= numUsers-1)
     {
       next_roller=0;
-      io.sockets.sockets[Object.keys(io.sockets.sockets)[next_roller]].emit('request roll');
     }
     else {
       next_roller++;
+    }
+    if(tmp_score < L)
+    {
+      score[username] =tmp_score;
+      io.emit('dice result', {
+        username: username,
+        value: dice_value,
+        scoreList: score
+      });
       io.sockets.sockets[Object.keys(io.sockets.sockets)[next_roller]].emit('request roll');
     }
+    else if (tmp_score == L) {
+      console.log("GAME OVER")
+      score[username] =tmp_score;
+      io.emit("winner", {
+        username: username,
+        scoreList: score,
+        value: dice_value,
+      });
+    }
+    else {
+      io.emit('dice result', {
+        username: username,
+        value: dice_value,
+        scoreList: score
+      });
+      io.sockets.sockets[Object.keys(io.sockets.sockets)[next_roller]].emit('request roll');
+    }
+
     //Next player roll
 
   });
-  //broadcast the winner
-  socket.on('winner', function(username){
-    socket.broadcast.emit('winner', username);
-  })
+
 
   //END
 

@@ -315,8 +315,13 @@ $(function() {
       message: message
     })
   })
-  socket.on('winner', function(username){
-    log('Winner: '+ username)
+  socket.on('winner', function(data){
+    message = "ScoreList: " + JSON.stringify(data.scoreList) + " User: " + data.username + " rolled " + data.value;
+    addChatMessage({
+      username: username,
+      message: message
+    })
+    log('Winner: '+ data.username)
   })
   function CallbackVariable(callback){
     socket.on('response room state', function(data){
