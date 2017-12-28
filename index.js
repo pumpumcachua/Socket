@@ -12,7 +12,7 @@ server.listen(port, function () {
 
 //new var
 
-var Score = {};
+var score = {};
 var N = 3;
 var next_roller = 0;
 var L = Math.floor(30*Math.random())+1;
@@ -57,7 +57,7 @@ io.on('connection', function (socket) {
     if (numUsers === N)
     {
       io.emit('start game', {
-        roller: Object.keys(Score)[next_roller]
+        roller: Object.keys(score)[next_roller]
       });
 
     }
@@ -66,8 +66,9 @@ io.on('connection', function (socket) {
   });
 
   socket.on('request room state',function(username){
+
     socket.emit('response room state', {
-      score: Score[username],
+      score: score[username],
       length: L
     })
   })
