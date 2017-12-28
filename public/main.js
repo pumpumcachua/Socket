@@ -27,7 +27,8 @@ $(function() {
   var length;
 
   var socket = io();
-
+  var score;
+  var length;
 
 
   //Dua ngua part
@@ -47,6 +48,7 @@ $(function() {
     log('Winner: '+ username)
   })
 
+  })
   function Roll()
   {
     socket.emit('roll the dice', username);
@@ -54,7 +56,7 @@ $(function() {
 
   function Accepted()
   {
-    
+    socket.emit('request room state', username);
   }
 
 
