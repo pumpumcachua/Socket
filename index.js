@@ -66,8 +66,7 @@ io.on('connection', function (socket) {
 
   });
 
-  socket.on('request room state',function(username){
-
+  socket.on('request room state',function(){
     socket.emit('response room state', {
       scoreList: score,
       length: L
