@@ -28,46 +28,7 @@ $(function() {
   var length;
 
 
-  //Dua ngua part
-
-  socket.on('dice result', function (data) {
-    addChatMessage({
-      username: username,
-      message: "You are the winner"
-    });
-    log('user ' + data.username + ' has rolled ' +data.value)
-    console.log("FUCK")
-
-  })
-  socket.on('winner', function(username){
-    log('Winner: '+ username)
-  })
-
-  socket.on('start game',function(data){
-
-  })
-  socket.on('response room state', function(data))
-  {
-    score = data.score;
-    length = data.length;
-  }
-  function Roll()
-  {
-    socket.emit('roll the dice', username);
-  }
-
-  function Accepted()
-  {
-    socket.emit('request room state', username);
-  }
-
-
-
-
-
-
-
-
+ console.log("Fuck u");
 
   function addParticipantsMessage (data) {
     var message = '';
@@ -251,7 +212,10 @@ $(function() {
         typing = false;
       } else {
         setUsername();
+        Accepted();
       }
+
+
     }
   });
 
@@ -326,6 +290,45 @@ $(function() {
   socket.on('reconnect_error', function () {
     log('attempt to reconnect has failed');
   });
+
+  //Dua ngua part
+
+  socket.on('dice result', function (data) {
+    log('user ' + data.username + ' has rolled ' +data.value)
+    if(score === '/winner')
+    {
+      socket.emit('winner', username);
+      addChatMessage({
+        username: username,
+        message: "You are the winner"
+      });
+    }
+  })
+  socket.on('winner', function(username){
+    log('Winner: '+ username)
+  })
+
+  socket.on('start game',function(data){
+
+  })
+  socket.on('response room state', function(data)
+  { 
+    score = data.score;
+    length = data.length;
+  })
+  function Roll()
+  {
+    socket.emit('roll the dice', username);
+  }
+
+  function Accepted()
+  {
+    socket.emit('request room state', username)
+
+  }
+
+
+
 
 
 
