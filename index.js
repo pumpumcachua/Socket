@@ -11,7 +11,7 @@ server.listen(port, function () {
 });
 
 //new var
-
+var socketlist = {};
 var score = {};
 var N = 3;
 var next_roller = 0;
@@ -42,6 +42,7 @@ io.on('connection', function (socket) {
 
     // we store the username in the socket session for this client
     socket.username = username;
+    socketlist[numUsers] = socket;
     ++numUsers;
     score[username] = 0;
     addedUser = true;
@@ -56,10 +57,8 @@ io.on('connection', function (socket) {
     //if room is full start the game
     if (numUsers === N)
     {
-      io.emit('start game', {
-        roller: Object.keys(score)[next_roller]
-      });
-
+      console.log("GAME START");
+      socketlist[next_roller].emit('Request roll');
     }
 
 
@@ -103,6 +102,8 @@ io.on('connection', function (socket) {
     else {
       next_roller++;
     }
+    //Next player roll
+    socketlist[next_roller].emit('Request roll');
   });
   //broadcast the winner
   socket.on('winner', function(username){

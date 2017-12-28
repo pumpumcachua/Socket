@@ -24,11 +24,8 @@ $(function() {
   var $currentInput = $usernameInput.focus();
 
   var socket = io();
-  var score;
-  var length;
-
-
- console.log("Fuck u");
+  var score  = 0;
+  var L = 484903;
 
   function addParticipantsMessage (data) {
     var message = '';
@@ -197,6 +194,20 @@ $(function() {
     return COLORS[index];
   }
 
+  function Roll()
+  {
+    socket.emit('roll the dice', username);
+  }
+
+  function Accepted()
+  {
+    socket.emit('request room state', username)
+    CallbackVariable(function(data){
+      console.log('This is the first handler');
+      console.log(data);
+    })
+  }
+
   // Keyboard events
 
   $window.keydown(function (event) {
@@ -295,38 +306,32 @@ $(function() {
 
   socket.on('dice result', function (data) {
     log('user ' + data.username + ' has rolled ' +data.value)
-    if(score === '/winner')
-    {
-      socket.emit('winner', username);
-      addChatMessage({
-        username: username,
-        message: "You are the winner"
-      });
-    }
+
   })
   socket.on('winner', function(username){
     log('Winner: '+ username)
   })
+  function CallbackVariable(callback){
+    socket.on('response room state', function(data){
+      console.log("1")
+      score = data.score;
+      L = data.length;
+      message = "Score: " + score + " Length: " + L;
+      addChatMessage({
+        username: username,
+        message: message
+      })
+      callback(data);
 
-  socket.on('start game',function(data){
+    });
 
-  })
-  socket.on('response room state', function(data)
-  { 
-    score = data.score;
-    length = data.length;
-  })
-  function Roll()
-  {
-    socket.emit('roll the dice', username);
-  }
+  };
 
-  function Accepted()
-  {
-    socket.emit('request room state', username)
 
-  }
 
+  socket.on('request roll',function(){
+    socket.emit('roll the dice',username)
+  });
 
 
 
