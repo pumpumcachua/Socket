@@ -12,8 +12,9 @@ server.listen(port, function () {
 
 //new var
 
-var Score = 0;
+var Score = {};
 var N = 3;
+var next_roller = 0;
 var L = Math.floor(30*Math.random())+1;
 
 // Routing
@@ -37,13 +38,12 @@ io.on('connection', function (socket) {
 
   // when the client emits 'add user', this listens and executes
   socket.on('add user', function (username) {
-    if (addedUser) return;
+    if (addedUser || numUsers>= N) return;
 
     // we store the username in the socket session for this client
     socket.username = username;
-    // add user room////////////////////////////////////////////////
-    socket.room = "Room " + 1;
     ++numUsers;
+    score[username] = 0;
     addedUser = true;
     socket.emit('login', {
       numUsers: numUsers
@@ -53,8 +53,24 @@ io.on('connection', function (socket) {
       username: socket.username,
       numUsers: numUsers
     });
+    //if room is full start the game
+    if (numUsers === N)
+    {
+      io.emit('start game', {
+        roller: Object.keys(Score)[next_roller]
+      });
+
+    }
+
+
   });
 
+  socket.on('request room state',function(username){
+    socket.emit('response room state', {
+      score: Score[username],
+      length: L
+    })
+  })
   // when the client emits 'typing', we broadcast it to others
   socket.on('typing', function () {
     socket.broadcast.emit('typing', {
@@ -72,12 +88,20 @@ io.on('connection', function (socket) {
   //dua ngua part =))
   // When the client emits 'roll the dice', we random 1->6 and broadcast to all clients
   socket.on('roll the dice', function(username){
-    //var dice_value = Math.floor(6*Math.random())+1;
-    var dice_value = 69;
-    socket.emit('dice result', {
+    var dice_value = Math.floor(6*Math.random())+1;
+
+    io.emit('dice result', {
       username: username,
       value: dice_value
     });
+
+    if(next_roller === N)
+    {
+      next_roller=0;
+    }
+    else {
+      next_roller++;
+    }
   });
   //broadcast the winner
   socket.on('winner', function(username){

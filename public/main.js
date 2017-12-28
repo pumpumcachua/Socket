@@ -23,6 +23,9 @@ $(function() {
   var lastTypingTime;
   var $currentInput = $usernameInput.focus();
 
+  var score;
+  var length;
+
   var socket = io();
 
 
@@ -30,13 +33,15 @@ $(function() {
   //Dua ngua part
 
   socket.on('dice result', function (data) {
-    addChatMessage({
-      username: username,
-      message: "You are the winner"
-    });
     log('user ' + data.username + ' has rolled ' +data.value)
-    console.log("FUCK")
-
+    if(score === '/winner')
+    {
+      socket.emit('winner', username);
+      addChatMessage({
+        username: username,
+        message: "You are the winner"
+      });
+    }
   })
   socket.on('winner', function(username){
     log('Winner: '+ username)
@@ -47,6 +52,10 @@ $(function() {
     socket.emit('roll the dice', username);
   }
 
+  function Accepted()
+  {
+    
+  }
 
 
 
@@ -238,7 +247,9 @@ $(function() {
         typing = false;
       } else {
         setUsername();
+        Accepted();
       }
+
     }
   });
 
