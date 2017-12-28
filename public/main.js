@@ -28,6 +28,7 @@ $(function() {
   var $currentInput = $usernameInput.focus();
 
   var socket = io();
+
   var score;
   var length;
 
@@ -43,6 +44,7 @@ $(function() {
       .append($usernameDiv, $scoreBodyDiv);
     addScoreElement($scoreDiv, options);
   }
+
 
   function addParticipantsMessage (data) {
     var message = '';
@@ -239,6 +241,20 @@ $(function() {
     return COLORS[index];
   }
 
+  function Roll()
+  {
+    socket.emit('roll the dice', username);
+  }
+
+  function Accepted()
+  {
+    socket.emit('request room state', username)
+    CallbackVariable(function(data){
+      console.log('This is the first handler');
+      console.log(data);
+    })
+  }
+
   // Keyboard events
 
   $window.keydown(function (event) {
@@ -336,25 +352,42 @@ $(function() {
   //Dua ngua part
 
   socket.on('dice result', function (data) {
-    log('user ' + data.username + ' has rolled ' +data.value)
+
     addPlayerScore({
       username: username,
       score: score + data.score
     });
-    if(score === '/winner')
-    {
-      socket.emit('winner', username);
+   
+    var scoreList = data.scoreList;
+    var player = data.username;
+    var dice_value = data.value;
+    message = "ScoreList: " + JSON.stringify(scoreList) + " User: " + player + " rolled " + dice_value;
+    addChatMessage({
+      username: username,
+      message: message
+    })
+  })
+  socket.on('winner', function(data){
+    message = "ScoreList: " + JSON.stringify(data.scoreList) + " User: " + data.username + " rolled " + data.value;
+    addChatMessage({
+      username: username,
+      message: message
+    })
+    log('Winner: '+ data.username)
+  })
+  function CallbackVariable(callback){
+    socket.on('response room state', function(data){
+      var scoreList = data.scoreList;
+      L = data.length;
+      message = "ScoreList: " + JSON.stringify(scoreList) + " Length: " + L;
       addChatMessage({
         username: username,
-        message: "You are the winner"
-      });
-    }
-  })
-  socket.on('winner', function(username){
-    log('Winner: '+ username)
-  })
+        message: message
+      })
+      callback(data);
 
-  socket.on('start game',function(data){
+    });
+
 
   })
   socket.on('response room state', function(data)
@@ -377,7 +410,9 @@ $(function() {
   }
 
 
-
+  socket.on('request roll',function(){
+    socket.emit('roll the dice',username)
+  });
 
 
 
