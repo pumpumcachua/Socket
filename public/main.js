@@ -12,9 +12,13 @@ $(function() {
   var $usernameInput = $('.usernameInput'); // Input for username
   var $messages = $('.messages'); // Messages area
   var $inputMessage = $('.inputMessage'); // Input message input box
-
+  var $inputMessage1 = $('.inputMessage1'); // Input message input box
   var $loginPage = $('.login.page'); // The login page
   var $chatPage = $('.chat.page'); // The chatroom page
+
+  var $scores = $('.scores'); // score area
+  var $messages1 = $('.messages1'); // Messages area
+
 
   // Prompt for setting a username
   var username;
@@ -27,8 +31,18 @@ $(function() {
   var score;
   var length;
 
-
- console.log("Fuck u");
+  function addPlayerScore (data, options) {
+      options = options || {};
+    var $usernameDiv = $('<span class="username"/>')
+      .text(data.username)
+      .css('color', getUsernameColor(data.username));
+    var $scoreBodyDiv = $('<span class="scoreBody">')
+      .text(data.score);
+    var $scoreDiv = $('<li class="score"/>')
+      .data('username', data.score)
+      .append($usernameDiv, $scoreBodyDiv);
+    addScoreElement($scoreDiv, options);
+  }
 
   function addParticipantsMessage (data) {
     var message = '';
@@ -72,8 +86,6 @@ $(function() {
       socket.emit('new message', message);
       if(message === '/roll')
         socket.emit('roll the dice', username);
-
-
     }
   }
 
@@ -106,6 +118,8 @@ $(function() {
       .append($usernameDiv, $messageBodyDiv);
 
     addMessageElement($messageDiv, options);
+    //////////////////////////////////////////////////////////////
+
   }
 
   // Adds the visual chat typing message
@@ -135,7 +149,7 @@ $(function() {
       options = {};
     }
     if (typeof options.fade === 'undefined') {
-      options.fade = true;
+      options.fade = false;
     }
     if (typeof options.prepend === 'undefined') {
       options.prepend = false;
@@ -147,11 +161,39 @@ $(function() {
     }
     if (options.prepend) {
       $messages.prepend($el);
+
     } else {
       $messages.append($el);
     }
     $messages[0].scrollTop = $messages[0].scrollHeight;
   }
+
+  function addScoreElement (el, options) {
+    var $el = $(el);
+    // Setup default options
+    if (!options) {
+      options = {};
+    }
+    if (typeof options.fade === 'undefined') {
+      options.fade = false;
+    }
+    if (typeof options.prepend === 'undefined') {
+      options.prepend = false;
+    }
+
+    // Apply options
+    if (options.fade) {
+      $el.hide().fadeIn(FADE_TIME);
+    }
+    if (options.prepend) {
+
+      $scores.prepend($el);
+    } else {
+        $scores.append($el);
+      }
+        $scores[0].scrollTop = $scores[0].scrollHeight;
+  }
+
 
   // Prevents input from having injected markup
   function cleanInput (input) {
@@ -295,6 +337,10 @@ $(function() {
 
   socket.on('dice result', function (data) {
     log('user ' + data.username + ' has rolled ' +data.value)
+    addPlayerScore({
+      username: username,
+      score: score + data.score
+    });
     if(score === '/winner')
     {
       socket.emit('winner', username);
@@ -312,7 +358,7 @@ $(function() {
 
   })
   socket.on('response room state', function(data)
-  { 
+  {
     score = data.score;
     length = data.length;
   })
@@ -324,7 +370,10 @@ $(function() {
   function Accepted()
   {
     socket.emit('request room state', username)
-
+    addPlayerScore({
+      username: username,
+      score: score
+    });
   }
 
 
