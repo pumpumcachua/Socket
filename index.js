@@ -72,8 +72,9 @@ io.on('connection', function (socket) {
   //dua ngua part =))
   // When the client emits 'roll the dice', we random 1->6 and broadcast to all clients
   socket.on('roll the dice', function(username){
-    var dice_value = Math.floor(6*Math.random())+1;
-    io.emit('dice result', {
+    //var dice_value = Math.floor(6*Math.random())+1;
+    var dice_value = 69;
+    socket.emit('dice result', {
       username: username,
       value: dice_value
     });
@@ -81,7 +82,7 @@ io.on('connection', function (socket) {
   //broadcast the winner
   socket.on('winner', function(username){
     socket.broadcast.emit('winner', username);
-})
+  })
 
   //END
 

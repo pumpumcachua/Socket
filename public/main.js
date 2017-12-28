@@ -30,15 +30,13 @@ $(function() {
   //Dua ngua part
 
   socket.on('dice result', function (data) {
+    addChatMessage({
+      username: username,
+      message: "You are the winner"
+    });
     log('user ' + data.username + ' has rolled ' +data.value)
-    if(score === '/winner')
-    {
-      socket.emit('winner', username);
-      addChatMessage({
-        username: username,
-        message: "You are the winner"
-      });
-    }
+    console.log("FUCK")
+
   })
   socket.on('winner', function(username){
     log('Winner: '+ username)
