@@ -33,16 +33,25 @@ $(function() {
   var length;
 
   function addPlayerScore (data, options) {
-      options = options || {};
-    var $usernameDiv = $('<span class="username"/>')
-      .text(data.username)
-      .css('color', getUsernameColor(data.username));
-    var $scoreBodyDiv = $('<span class="scoreBody">')
-      .text(data.score);
-    var $scoreDiv = $('<li class="score"/>')
-      .data('username', data.score)
-      .append($usernameDiv, $scoreBodyDiv);
-    addScoreElement($scoreDiv, options);
+    options = options || {};
+    var usernames = Object.keys(data.scoreList)
+    var score_r = $('.score')
+    score_r.remove('.score')
+    for (var i = 0 ; i < usernames.length;i++)
+    {
+      var username_tmp = usernames[i];
+      var score_tmp = data.scoreList[usernames[i]];
+      var $usernameDiv = $('<span class="username"/>')
+        .text(username_tmp)
+        .css('color', getUsernameColor(username_tmp));
+      var $scoreBodyDiv = $('<span class="scoreBody">')
+        .text(score_tmp);
+      var $scoreDiv = $('<li class="score"/>')
+        .data('username', score_tmp)
+        .append($usernameDiv, $scoreBodyDiv);
+      addScoreElement($scoreDiv, options);
+    }
+
   }
 
 
@@ -120,7 +129,7 @@ $(function() {
       .append($usernameDiv, $messageBodyDiv);
 
     addMessageElement($messageDiv, options);
-    //////////////////////////////////////////////////////////////
+
 
   }
 
@@ -192,8 +201,10 @@ $(function() {
       $scores.prepend($el);
     } else {
         $scores.append($el);
+        console.log($el);
       }
-        $scores[0].scrollTop = $scores[0].scrollHeight;
+
+      $scores[0].scrollTop = $scores[0].scrollHeight;
   }
 
 
@@ -210,7 +221,7 @@ $(function() {
         socket.emit('typing');
       }
       lastTypingTime = (new Date()).getTime();
-
+/*
       setTimeout(function () {
         var typingTimer = (new Date()).getTime();
         var timeDiff = typingTimer - lastTypingTime;
@@ -218,7 +229,7 @@ $(function() {
           socket.emit('stop typing');
           typing = false;
         }
-      }, TYPING_TIMER_LENGTH);
+      }, TYPING_TIMER_LENGTH);*/
     }
   }
 
@@ -248,7 +259,8 @@ $(function() {
 
   function Accepted()
   {
-    socket.emit('request room state', username)
+    socket.emit('request room state')
+
     CallbackVariable(function(data){
       console.log('This is the first handler');
       console.log(data);
@@ -314,6 +326,7 @@ $(function() {
   // Whenever the server emits 'user joined', log it in the chat body
   socket.on('user joined', function (data) {
     log(data.username + ' joined');
+    socket.emit('request room state')
     addParticipantsMessage(data);
   });
 
@@ -353,11 +366,11 @@ $(function() {
 
   socket.on('dice result', function (data) {
 
+/*
     addPlayerScore({
-      username: username,
       score: score + data.score
     });
-   
+*/
     var scoreList = data.scoreList;
     var player = data.username;
     var dice_value = data.value;
@@ -380,34 +393,13 @@ $(function() {
       var scoreList = data.scoreList;
       L = data.length;
       message = "ScoreList: " + JSON.stringify(scoreList) + " Length: " + L;
-      addChatMessage({
-        username: username,
-        message: message
-      })
+      addPlayerScore({
+        scoreList: data.scoreList
+      });
       callback(data);
-
     });
+    }
 
-
-  })
-  socket.on('response room state', function(data)
-  {
-    score = data.score;
-    length = data.length;
-  })
-  function Roll()
-  {
-    socket.emit('roll the dice', username);
-  }
-
-  function Accepted()
-  {
-    socket.emit('request room state', username)
-    addPlayerScore({
-      username: username,
-      score: score
-    });
-  }
 
 
   socket.on('request roll',function(){
