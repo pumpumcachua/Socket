@@ -10,6 +10,12 @@ server.listen(port, function () {
   console.log('Server listening at port %d', port);
 });
 
+//new var
+
+var Score = 0;
+var N = 3;
+var L = Math.floor(30*Math.random())+1;
+
 // Routing
 app.use(express.static(path.join(__dirname, 'public')));
 

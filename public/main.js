@@ -25,10 +25,36 @@ $(function() {
 
   var socket = io();
 
-  //new var
-  var N = 3;
-  var L = Math.floor(30*Math.random())+1;
-  var Score = 0;
+
+
+  //Dua ngua part
+
+  socket.on('dice result', function (data) {
+    log('user ' + data.username + ' has rolled ' +data.value)
+    if(score === '/winner')
+    {
+      socket.emit('winner', username);
+      addChatMessage({
+        username: username,
+        message: "You are the winner"
+      });
+    }
+  })
+  socket.on('winner', function(username){
+    log('Winner: '+ username)
+  })
+
+  function Roll()
+  {
+    socket.emit('roll the dice', username);
+  }
+
+
+
+
+
+
+
 
 
 
@@ -291,22 +317,7 @@ $(function() {
   });
 
 
-  //Dua ngua part
 
-  socket.on('dice result', function (data) {
-    log('user ' + data.username + ' has rolled ' +data.value)
-    if(score === '/winner')
-    {
-      socket.emit('winner', username);
-      addChatMessage({
-        username: username,
-        message: "You are the winner"
-      });
-    }
-  })
-  socket.on('winner', function(username){
-    log('Winner: '+ username)
-  })
 
 
 });
