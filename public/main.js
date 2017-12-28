@@ -305,18 +305,24 @@ $(function() {
   //Dua ngua part
 
   socket.on('dice result', function (data) {
-    log('user ' + data.username + ' has rolled ' +data.value)
-
+    //log('user ' + data.username + ' has rolled ' +data.value)
+    var scoreList = data.scoreList;
+    var player = data.username;
+    var dice_value = data.value;
+    message = "ScoreList: " + JSON.stringify(scoreList) + " User: " + player + " rolled " + dice_value;
+    addChatMessage({
+      username: username,
+      message: message
+    })
   })
   socket.on('winner', function(username){
     log('Winner: '+ username)
   })
   function CallbackVariable(callback){
     socket.on('response room state', function(data){
-      console.log("1")
-      score = data.score;
+      var scoreList = data.scoreList;
       L = data.length;
-      message = "Score: " + score + " Length: " + L;
+      message = "ScoreList: " + JSON.stringify(scoreList) + " Length: " + L;
       addChatMessage({
         username: username,
         message: message

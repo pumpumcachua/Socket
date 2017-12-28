@@ -11,7 +11,6 @@ server.listen(port, function () {
 });
 
 //new var
-var socketlist = {};
 var score = {};
 var N = 3;
 var next_roller = 0;
@@ -42,7 +41,7 @@ io.on('connection', function (socket) {
 
     // we store the username in the socket session for this client
     socket.username = username;
-    socketlist[numUsers] = socket;
+
     ++numUsers;
     score[username] = 0;
     addedUser = true;
@@ -58,7 +57,9 @@ io.on('connection', function (socket) {
     if (numUsers === N)
     {
       console.log("GAME START");
-      socketlist[next_roller].emit('Request roll');
+      //console.log(Object.keys(io.sockets.sockets)[1]);
+    //  console.log(io.sockets.sockets[Object.keys(io.sockets.sockets)[1]])
+      io.sockets.sockets[Object.keys(io.sockets.sockets)[next_roller]].emit('request roll');
     }
 
 
@@ -67,7 +68,7 @@ io.on('connection', function (socket) {
   socket.on('request room state',function(username){
 
     socket.emit('response room state', {
-      score: score[username],
+      scoreList: score,
       length: L
     })
   })
@@ -89,21 +90,24 @@ io.on('connection', function (socket) {
   // When the client emits 'roll the dice', we random 1->6 and broadcast to all clients
   socket.on('roll the dice', function(username){
     var dice_value = Math.floor(6*Math.random())+1;
-
+    score[username] += dice_value;
     io.emit('dice result', {
       username: username,
-      value: dice_value
+      value: dice_value,
+      scoreList: score
     });
 
-    if(next_roller === N)
+    if(next_roller >= numUsers-1)
     {
       next_roller=0;
+      io.sockets.sockets[Object.keys(io.sockets.sockets)[next_roller]].emit('request roll');
     }
     else {
       next_roller++;
+      io.sockets.sockets[Object.keys(io.sockets.sockets)[next_roller]].emit('request roll');
     }
     //Next player roll
-    socketlist[next_roller].emit('Request roll');
+
   });
   //broadcast the winner
   socket.on('winner', function(username){
