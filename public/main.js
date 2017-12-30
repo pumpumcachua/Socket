@@ -12,9 +12,13 @@ $(function() {
   var $usernameInput = $('.usernameInput'); // Input for username
   var $messages = $('.messages'); // Messages area
   var $inputMessage = $('.inputMessage'); // Input message input box
-
+  var $inputMessage1 = $('.inputMessage1'); // Input message input box
   var $loginPage = $('.login.page'); // The login page
   var $chatPage = $('.chat.page'); // The chatroom page
+
+  var $scores = $('.scores'); // score area
+  var $messages1 = $('.messages1'); // Messages area
+
 
   // Prompt for setting a username
   var username;
@@ -25,37 +29,29 @@ $(function() {
 
   var socket = io();
 
+  var score;
+  var length;
 
-
-  //Dua ngua part
-
-  socket.on('dice result', function (data) {
-    log('user ' + data.username + ' has rolled ' +data.value)
-    if(score === '/winner')
+  function addPlayerScore (data, options) {
+    options = options || {};
+    var usernames = Object.keys(data.scoreList)
+    var score_r = $('.score')
+    score_r.remove('.score')
+    for (var i = 0 ; i < usernames.length;i++)
     {
-      socket.emit('winner', username);
-      addChatMessage({
-        username: username,
-        message: "You are the winner"
-      });
+      var username_tmp = usernames[i];
+      var score_tmp = data.scoreList[usernames[i]];
+      var $usernameDiv = $('<span class="username"/>')
+        .text(username_tmp)
+        .css('color', getUsernameColor(username_tmp));
+      var $scoreBodyDiv = $('<span class="scoreBody">')
+        .text(score_tmp);
+      var $scoreDiv = $('<li class="score"/>')
+        .data('username', score_tmp)
+        .append($usernameDiv, $scoreBodyDiv);
+      addScoreElement($scoreDiv, options);
     }
-  })
-  socket.on('winner', function(username){
-    log('Winner: '+ username)
-  })
-
-  function Roll()
-  {
-    socket.emit('roll the dice', username);
   }
-
-
-
-
-
-
-
-
 
 
   function addParticipantsMessage (data) {
@@ -100,8 +96,6 @@ $(function() {
       socket.emit('new message', message);
       if(message === '/roll')
         socket.emit('roll the dice', username);
-
-
     }
   }
 
@@ -134,6 +128,8 @@ $(function() {
       .append($usernameDiv, $messageBodyDiv);
 
     addMessageElement($messageDiv, options);
+
+
   }
 
   // Adds the visual chat typing message
@@ -163,7 +159,7 @@ $(function() {
       options = {};
     }
     if (typeof options.fade === 'undefined') {
-      options.fade = true;
+      options.fade = false;
     }
     if (typeof options.prepend === 'undefined') {
       options.prepend = false;
@@ -175,11 +171,41 @@ $(function() {
     }
     if (options.prepend) {
       $messages.prepend($el);
+
     } else {
       $messages.append($el);
     }
     $messages[0].scrollTop = $messages[0].scrollHeight;
   }
+
+  function addScoreElement (el, options) {
+    var $el = $(el);
+    // Setup default options
+    if (!options) {
+      options = {};
+    }
+    if (typeof options.fade === 'undefined') {
+      options.fade = false;
+    }
+    if (typeof options.prepend === 'undefined') {
+      options.prepend = false;
+    }
+
+    // Apply options
+    if (options.fade) {
+      $el.hide().fadeIn(FADE_TIME);
+    }
+    if (options.prepend) {
+
+      $scores.prepend($el);
+    } else {
+        $scores.append($el);
+        console.log($el);
+      }
+
+      $scores[0].scrollTop = $scores[0].scrollHeight;
+  }
+
 
   // Prevents input from having injected markup
   function cleanInput (input) {
@@ -194,7 +220,7 @@ $(function() {
         socket.emit('typing');
       }
       lastTypingTime = (new Date()).getTime();
-
+/*
       setTimeout(function () {
         var typingTimer = (new Date()).getTime();
         var timeDiff = typingTimer - lastTypingTime;
@@ -202,7 +228,7 @@ $(function() {
           socket.emit('stop typing');
           typing = false;
         }
-      }, TYPING_TIMER_LENGTH);
+      }, TYPING_TIMER_LENGTH);*/
     }
   }
 
@@ -225,6 +251,21 @@ $(function() {
     return COLORS[index];
   }
 
+  function Roll()
+  {
+    socket.emit('roll the dice', username);
+  }
+
+  function Accepted()
+  {
+    socket.emit('request room state')
+
+    CallbackVariable(function(data){
+      console.log('This is the first handler');
+      console.log(data);
+    })
+  }
+
   // Keyboard events
 
   $window.keydown(function (event) {
@@ -240,7 +281,10 @@ $(function() {
         typing = false;
       } else {
         setUsername();
+        Accepted();
       }
+
+
     }
   });
 
@@ -281,6 +325,7 @@ $(function() {
   // Whenever the server emits 'user joined', log it in the chat body
   socket.on('user joined', function (data) {
     log(data.username + ' joined');
+    socket.emit('request room state')
     addParticipantsMessage(data);
   });
 
@@ -314,6 +359,44 @@ $(function() {
 
   socket.on('reconnect_error', function () {
     log('attempt to reconnect has failed');
+  });
+
+  //Dua ngua part
+
+  socket.on('dice result', function (data) {
+    var scoreList = data.scoreList;
+    var player = data.username;
+    var dice_value = data.value;
+    message = " Player: " + player + " rolled " + dice_value;
+    log(message);
+    addPlayerScore({
+      scoreList: data.scoreList
+    });
+  })
+  socket.on('winner', function(data){
+    message = " Player: " + data.username + " rolled " + data.value;
+    log(message);
+    addPlayerScore({
+      scoreList: data.scoreList
+    });
+    log('Winner: '+ data.username);
+  })
+  function CallbackVariable(callback){
+    socket.on('response room state', function(data){
+      var scoreList = data.scoreList;
+      L = data.length;
+      message = "ScoreList: " + JSON.stringify(scoreList) + " Length: " + L;
+      addPlayerScore({
+        scoreList: data.scoreList
+      });
+      callback(data);
+    });
+    }
+
+
+
+  socket.on('request roll',function(){
+    socket.emit('roll the dice',username)
   });
 
 
