@@ -51,7 +51,6 @@ $(function() {
         .append($usernameDiv, $scoreBodyDiv);
       addScoreElement($scoreDiv, options);
     }
-
   }
 
 
@@ -365,28 +364,22 @@ $(function() {
   //Dua ngua part
 
   socket.on('dice result', function (data) {
-
-/*
-    addPlayerScore({
-      score: score + data.score
-    });
-*/
     var scoreList = data.scoreList;
     var player = data.username;
     var dice_value = data.value;
-    message = "ScoreList: " + JSON.stringify(scoreList) + " User: " + player + " rolled " + dice_value;
-    addChatMessage({
-      username: username,
-      message: message
-    })
+    message = " Player: " + player + " rolled " + dice_value;
+    log(message);
+    addPlayerScore({
+      scoreList: data.scoreList
+    });
   })
   socket.on('winner', function(data){
-    message = "ScoreList: " + JSON.stringify(data.scoreList) + " User: " + data.username + " rolled " + data.value;
-    addChatMessage({
-      username: username,
-      message: message
-    })
-    log('Winner: '+ data.username)
+    message = " Player: " + data.username + " rolled " + data.value;
+    log(message);
+    addPlayerScore({
+      scoreList: data.scoreList
+    });
+    log('Winner: '+ data.username);
   })
   function CallbackVariable(callback){
     socket.on('response room state', function(data){

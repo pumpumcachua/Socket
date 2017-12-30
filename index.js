@@ -62,8 +62,6 @@ io.on('connection', function (socket) {
     //  console.log(io.sockets.sockets[Object.keys(io.sockets.sockets)[1]])
       io.sockets.sockets[Object.keys(io.sockets.sockets)[next_roller]].emit('request roll');
     }
-
-
   });
 
   socket.on('request room state',function(){
