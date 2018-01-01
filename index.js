@@ -90,24 +90,8 @@ io.on('connection', function (socket) {
     var dice_value = Math.floor(6*Math.random())+1;
 
     tmp_score = score[username] + dice_value;
-    if(next_roller >= numUsers-1)
+    if (tmp_score == L)
     {
-      next_roller=0;
-    }
-    else {
-      next_roller++;
-    }
-    if(tmp_score < L)
-    {
-      score[username] =tmp_score;
-      io.emit('dice result', {
-        username: username,
-        value: dice_value,
-        scoreList: score
-      });
-      io.sockets.sockets[Object.keys(io.sockets.sockets)[next_roller]].emit('request roll');
-    }
-    else if (tmp_score == L) {
       console.log("GAME OVER")
       score[username] =tmp_score;
       io.emit("winner", {
@@ -117,15 +101,25 @@ io.on('connection', function (socket) {
       });
     }
     else {
+      if(tmp_score < L)
+      {
+        score[username] =tmp_score;
+      }
       io.emit('dice result', {
         username: username,
         value: dice_value,
         scoreList: score
       });
+      //Next player roll
+      if(next_roller >= numUsers-1)
+      {
+        next_roller=0;
+      }
+      else {
+        next_roller++;
+      }
       io.sockets.sockets[Object.keys(io.sockets.sockets)[next_roller]].emit('request roll');
     }
-
-    //Next player roll
 
   });
 

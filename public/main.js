@@ -17,7 +17,6 @@ $(function() {
   var $chatPage = $('.chat.page'); // The chatroom page
 
   var $scores = $('.scores'); // score area
-  var $messages1 = $('.messages1'); // Messages area
 
 
   // Prompt for setting a username
@@ -26,9 +25,9 @@ $(function() {
   var typing = false;
   var lastTypingTime;
   var $currentInput = $usernameInput.focus();
-
+  var roll_permission = false;
   var socket = io();
-
+  var rolling_timeout;
   var score;
   var length;
 
@@ -220,7 +219,7 @@ $(function() {
         socket.emit('typing');
       }
       lastTypingTime = (new Date()).getTime();
-/*
+
       setTimeout(function () {
         var typingTimer = (new Date()).getTime();
         var timeDiff = typingTimer - lastTypingTime;
@@ -228,7 +227,7 @@ $(function() {
           socket.emit('stop typing');
           typing = false;
         }
-      }, TYPING_TIMER_LENGTH);*/
+      }, TYPING_TIMER_LENGTH);
     }
   }
 
@@ -251,11 +250,6 @@ $(function() {
     return COLORS[index];
   }
 
-  function Roll()
-  {
-    socket.emit('roll the dice', username);
-  }
-
   function Accepted()
   {
     socket.emit('request room state')
@@ -265,6 +259,19 @@ $(function() {
       console.log(data);
     })
   }
+//button Prevents
+$( "#Roll" ).click(function() {
+  if(roll_permission)
+  {
+    //disable auto rolling
+    clearTimeout(rolling_timeout)
+    socket.emit('roll the dice',username)
+    roll_permission= false;
+  }
+  else {
+    log("It's not your turn");
+  }
+});
 
   // Keyboard events
 
@@ -393,10 +400,22 @@ $(function() {
     });
     }
 
-
-
   socket.on('request roll',function(){
-    socket.emit('roll the dice',username)
+    roll_permission = true;
+    log("your turn to roll")
+    if(connected)
+    {
+      if(roll_permission)
+      {
+        //auto roll after 5 secs
+        rolling_timeout = setTimeout(function () {
+          log("Auto rolled")
+          roll_permission = false
+          socket.emit('roll the dice',username)
+        }, 5000);
+      }
+    }
+
   });
 
 
