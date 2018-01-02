@@ -21,6 +21,7 @@ $(function() {
 
   // Prompt for setting a username
   var username;
+  var username_is_valid = false;
   var connected = false;
   var typing = false;
   var lastTypingTime;
@@ -31,6 +32,31 @@ $(function() {
   var score;
   var length;
 
+// Login Page
+// Sets the client's username
+function setUsername () {
+  var raw_username = cleanInput($usernameInput.val().trim());
+  socket.emit("check username",raw_username);
+  CallbackVariable1(function(data){
+    console.log('Username handler');
+    console.log(data);
+  })
+}
+
+
+//Chat Page
+// Gets the color of a username through our hash function
+  function getUsernameColor (username) {
+    // Compute hash code
+    var hash = 7;
+    for (var i = 0; i < username.length; i++) {
+       hash = username.charCodeAt(i) + (hash << 5) - hash;
+    }
+    // Calculate color
+    var index = Math.abs(hash % COLORS.length);
+    return COLORS[index];
+  }
+//ScoreList part
   function addPlayerScore (data, options) {
     options = options || {};
     var usernames = Object.keys(data.scoreList)
@@ -44,41 +70,58 @@ $(function() {
         .text(username_tmp)
         .css('color', getUsernameColor(username_tmp));
       var $scoreBodyDiv = $('<span class="scoreBody">')
-        .text(score_tmp);
+        .text(score_tmp+'/'+L);
       var $scoreDiv = $('<li class="score"/>')
         .data('username', score_tmp)
         .append($usernameDiv, $scoreBodyDiv);
       addScoreElement($scoreDiv, options);
     }
   }
+  function addScoreElement (el, options) {
+    var $el = $(el);
+    // Setup default options
+    if (!options) {
+      options = {};
+    }
+    if (typeof options.fade === 'undefined') {
+      options.fade = false;
+    }
+    if (typeof options.prepend === 'undefined') {
+      options.prepend = false;
+    }
 
+    // Apply options
+    if (options.fade) {
+      $el.hide().fadeIn(FADE_TIME);
+    }
+    if (options.prepend) {
 
-  function addParticipantsMessage (data) {
-    var message = '';
-    if (data.numUsers === 1) {
-      message += "there's 1 participant";
+      $scores.prepend($el);
     } else {
-      message += "there are " + data.numUsers + " participants";
-    }
-    log(message);
+        $scores.append($el);
+      }
+
+      $scores[0].scrollTop = $scores[0].scrollHeight;
   }
+  function getRoomState(){
+    socket.emit('request room state');
 
-  // Sets the client's username
-  function setUsername () {
-    username = cleanInput($usernameInput.val().trim());
-
-    // If the username is valid
-    if (username) {
-      $loginPage.fadeOut();
-      $chatPage.show();
-      $loginPage.off('click');
-      $currentInput = $inputMessage.focus();
-
-      // Tell the server your username
-      socket.emit('add user', username);
-    }
+    CallbackVariable(function(data){
+      console.log('Room state handler');
+      console.log(data);
+    })
   }
-
+//Chat window
+  // Add participant messages
+  function addParticipantsMessage (data) {
+  var message = '';
+  if (data.numUsers === 1) {
+    message += "there's 1 participant";
+  } else {
+    message += "there are " + data.numUsers + " participants";
+  }
+  log(message);
+}
   // Sends a chat message
   function sendMessage () {
     var message = $inputMessage.val();
@@ -97,13 +140,11 @@ $(function() {
         socket.emit('roll the dice', username);
     }
   }
-
   // Log a message
   function log (message, options) {
     var $el = $('<li>').addClass('log').text(message);
     addMessageElement($el, options);
   }
-
   // Adds the visual chat message to the message list
   function addChatMessage (data, options) {
     // Don't fade the message in if there is an 'X was typing'
@@ -130,21 +171,18 @@ $(function() {
 
 
   }
-
   // Adds the visual chat typing message
   function addChatTyping (data) {
     data.typing = true;
     data.message = 'is typing';
     addChatMessage(data);
   }
-
   // Removes the visual chat typing message
   function removeChatTyping (data) {
     getTypingMessages(data).fadeOut(function () {
       $(this).remove();
     });
   }
-
   // Adds a message element to the messages and scrolls to the bottom
   // el - The element to add as a message
   // options.fade - If the element should fade-in (default = true)
@@ -176,41 +214,10 @@ $(function() {
     }
     $messages[0].scrollTop = $messages[0].scrollHeight;
   }
-
-  function addScoreElement (el, options) {
-    var $el = $(el);
-    // Setup default options
-    if (!options) {
-      options = {};
-    }
-    if (typeof options.fade === 'undefined') {
-      options.fade = false;
-    }
-    if (typeof options.prepend === 'undefined') {
-      options.prepend = false;
-    }
-
-    // Apply options
-    if (options.fade) {
-      $el.hide().fadeIn(FADE_TIME);
-    }
-    if (options.prepend) {
-
-      $scores.prepend($el);
-    } else {
-        $scores.append($el);
-        console.log($el);
-      }
-
-      $scores[0].scrollTop = $scores[0].scrollHeight;
-  }
-
-
   // Prevents input from having injected markup
   function cleanInput (input) {
     return $('<div/>').text(input).html();
   }
-
   // Updates the typing event
   function updateTyping () {
     if (connected) {
@@ -230,51 +237,49 @@ $(function() {
       }, TYPING_TIMER_LENGTH);
     }
   }
-
   // Gets the 'X is typing' messages of a user
   function getTypingMessages (data) {
     return $('.typing.message').filter(function (i) {
       return $(this).data('username') === data.username;
     });
   }
+//Callback functions
+  function CallbackVariable(callback){
+    socket.on('response room state', function(data){
+      var scoreList = data.scoreList;
+      L = data.length;
+      message = "ScoreList: " + JSON.stringify(scoreList) + " Length: " + L;
+      addPlayerScore({
+        scoreList: data.scoreList
+      });
+      callback(data);
+    });
+  }
+  function CallbackVariable1(callback){
+    socket.on('check username result', function(data){
+      // If the username is valid
+      if (data.valid && data.username) {
+        // Tell the server your username
+        username = data.username;
+        socket.emit('add user', username);
 
-  // Gets the color of a username through our hash function
-  function getUsernameColor (username) {
-    // Compute hash code
-    var hash = 7;
-    for (var i = 0; i < username.length; i++) {
-       hash = username.charCodeAt(i) + (hash << 5) - hash;
-    }
-    // Calculate color
-    var index = Math.abs(hash % COLORS.length);
-    return COLORS[index];
+        $loginPage.fadeOut();
+        $chatPage.show();
+        $loginPage.off('click');
+        $currentInput = $inputMessage.focus();
+
+        getRoomState();
+      }
+      else {
+
+        alert("Invalid username");
+      }
+      callback(data);
+    });
   }
 
-  function Accepted()
-  {
-    socket.emit('request room state')
 
-    CallbackVariable(function(data){
-      console.log('This is the first handler');
-      console.log(data);
-    })
-  }
-//button Prevents
-$( "#Roll" ).click(function() {
-  if(roll_permission)
-  {
-    //disable auto rolling
-    clearTimeout(rolling_timeout)
-    socket.emit('roll the dice',username)
-    roll_permission= false;
-  }
-  else {
-    log("It's not your turn");
-  }
-});
-
-  // Keyboard events
-
+// Keyboard events
   $window.keydown(function (event) {
     // Auto-focus the current input when a key is typed
     if (!(event.ctrlKey || event.metaKey || event.altKey)) {
@@ -288,19 +293,26 @@ $( "#Roll" ).click(function() {
         typing = false;
       } else {
         setUsername();
-        Accepted();
       }
-
-
     }
   });
-
   $inputMessage.on('input', function() {
     updateTyping();
   });
-
-  // Click events
-
+// Click events
+  // trigger roll function when user click on Roll button
+  $( "#Roll" ).click(function() {
+    if(roll_permission)
+    {
+      //disable auto rolling
+      clearTimeout(rolling_timeout)
+      socket.emit('roll the dice',username)
+      roll_permission= false;
+    }
+    else {
+      alert("It's not your turn");
+    }
+  });
   // Focus input when clicking anywhere on login page
   $loginPage.click(function () {
     $currentInput.focus();
@@ -368,8 +380,6 @@ $( "#Roll" ).click(function() {
     log('attempt to reconnect has failed');
   });
 
-  //Dua ngua part
-
   socket.on('dice result', function (data) {
     var scoreList = data.scoreList;
     var player = data.username;
@@ -388,17 +398,6 @@ $( "#Roll" ).click(function() {
     });
     log('Winner: '+ data.username);
   })
-  function CallbackVariable(callback){
-    socket.on('response room state', function(data){
-      var scoreList = data.scoreList;
-      L = data.length;
-      message = "ScoreList: " + JSON.stringify(scoreList) + " Length: " + L;
-      addPlayerScore({
-        scoreList: data.scoreList
-      });
-      callback(data);
-    });
-    }
 
   socket.on('request roll',function(){
     roll_permission = true;
@@ -417,9 +416,5 @@ $( "#Roll" ).click(function() {
     }
 
   });
-
-
-
-
 
 });
