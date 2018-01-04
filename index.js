@@ -43,7 +43,7 @@ stdin.addListener("data", function(d) {
         var addedUser = false;
         if(numUsers>= N)
         {
-          console.log("Room full")
+          socket.emit("room full");
           return;
         }
 

@@ -416,5 +416,8 @@ function setUsername () {
     }
 
   });
-
+  socket.on("room full".function(){
+    alert("Room is full");
+    return;
+  });
 });
