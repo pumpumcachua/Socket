@@ -416,5 +416,12 @@ function setUsername () {
     }
 
   });
+  socket.on("room full".function(){
+    alert("Room is full");
+    return;
+  });
 
+  socket.on("game start",function(){
+    alert("Game started")
+  })
 });
