@@ -108,6 +108,7 @@ stdin.addListener("data", function(d) {
           if (numUsers === N)
           {
             console.log("GAME START");
+            io.emit("game start");
             io.sockets.sockets[Object.keys(io.sockets.sockets)[next_roller]].emit('request roll');
           }
         });

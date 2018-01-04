@@ -420,4 +420,8 @@ function setUsername () {
     alert("Room is full");
     return;
   });
+
+  socket.on("game start",function(){
+    alert("Game started")
+  })
 });
